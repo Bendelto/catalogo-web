@@ -195,37 +195,77 @@ if ($singleTour) {
             .lightbox-nav { font-size: 2rem; padding: 10px; }
         }
 
-        .info-box { background: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.03); }
-        .list-check li { list-style: none; padding-left: 0; margin-bottom: 8px; font-size: 0.95rem; }
+        .info-box { background: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.03); border-left: 3px solid #f0f4ff; }
         
+        /* Incluye / No Incluye Pills */
+        .section-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+        .section-pill.incluye { background: #d1fae5; color: #065f46; }
+        .section-pill.no-incluye { background: #fee2e2; color: #991b1b; }
+        .list-check li { list-style: none; padding: 6px 10px; margin-bottom: 6px; font-size: 0.85rem; border-radius: 8px; transition: background 0.2s, transform 0.2s; }
+        .list-check.incluye-list li:hover { background: #f0fdf4; transform: translateX(3px); }
+        .list-check.no-incluye-list li:hover { background: #fff5f5; transform: translateX(3px); }
+
+        /* Descripción expandible */
+        .desc-text { white-space: pre-line; line-height: 1.8; font-size: 0.92rem; color: #4a5568; border-left: 3px solid #e8f0fe; padding-left: 14px; }
+        .desc-collapsed { max-height: 120px; overflow: hidden; position: relative; }
+        .desc-collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(transparent, white); }
+        .btn-leer-mas { background: none; border: none; color: #0d6efd; font-size: 0.85rem; font-weight: 600; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-top: 8px; }
+
         .accordion-item { border: 0; border-radius: 12px !important; overflow: hidden; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .accordion-button:not(.collapsed) { background-color: #f1f8ff; color: #0d6efd; font-weight: 600; }
 
         h4, h6, .tour-title { font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; }
-        
-        .price-cop-highlight { color: #1a1a1a; font-weight: 700; font-size: 1.25rem; display: block; line-height: 1.1; }
+
+        /* Tarjeta de Precios Mejorada */
+        .price-card-hero { background: white; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border-left: 4px solid #0d6efd; position: relative; overflow: hidden; }
+        .price-card-hero::before { content: ''; position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: radial-gradient(circle, rgba(13,110,253,0.05) 0%, transparent 70%); }
+        .price-cop-highlight { color: #0d47a1; font-weight: 800; font-size: 1.7rem; display: block; line-height: 1.1; letter-spacing: -1px; }
         .price-old { text-decoration: line-through; color: #999; font-size: 0.8rem; font-weight: 400; display: block; margin-bottom: 2px; }
-        
-        .flag-icon { width: 22px !important; height: auto; vertical-align: middle; margin-right: 6px; box-shadow: none; flex-shrink: 0; }
-        
-        .calc-box { background-color: #fff; border-radius: 12px; padding: 20px; border: 1px solid #edf2f7; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .form-control-qty { text-align: center; font-weight: bold; background: #f8f9fa; height: 50px; font-size: 1.3rem; font-family: 'Poppins', sans-serif; }
-        .total-display { background-color: #e7f1ff; color: #0d6efd; border: 1px solid #cce5ff; border-radius: 12px; padding: 20px; margin-top: 20px; }
-        
-        .btn-back { background-color: #e9ecef; color: #333; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: bold; transition: transform 0.2s; }
+        .price-label { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 4px; display: block; }
+        .currency-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; margin-top: 6px; }
+        .currency-pill.usd { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .currency-pill.brl { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .price-divider { width: 1px; background: linear-gradient(to bottom, transparent, #e2e8f0, transparent); align-self: stretch; margin: 0 10px; }
+        .rates-footnote { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; padding-top: 10px; margin-top: 10px; border-top: 1px solid #f1f5f9; }
+
+        .flag-icon { width: 16px !important; height: auto; vertical-align: middle; margin-right: 4px; box-shadow: none; flex-shrink: 0; border-radius: 2px; }
+
+        /* Calculadora táctil */
+        .calc-box { background-color: #fff; border-radius: 16px; padding: 22px; border: 1px solid #edf2f7; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .qty-control { display: flex; align-items: center; justify-content: center; gap: 0; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .qty-btn { background: #f8fafc; border: none; width: 44px; height: 44px; font-size: 1.3rem; font-weight: 700; color: #0d6efd; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .qty-btn:active { background: #dbeafe; }
+        .qty-val { width: 50px; text-align: center; font-weight: 700; font-size: 1.1rem; color: #1a1a1a; background: white; border: none; border-left: 1.5px solid #e2e8f0; border-right: 1.5px solid #e2e8f0; height: 44px; font-family: 'Poppins', sans-serif; }
+        .qty-val:focus { outline: none; }
+        .total-display { background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%); border: 1px solid #bfdbfe; border-radius: 14px; padding: 20px; margin-top: 20px; }
+        .total-cop-num { font-size: 2rem; font-weight: 800; color: #1d4ed8; letter-spacing: -1px; transition: all 0.3s ease; }
+        .total-currency-pill { background: white; border-radius: 10px; padding: 10px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex: 1; text-align: center; }
+
+        .btn-back { background-color: #e9ecef; color: #333; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: bold; transition: all 0.2s; flex-shrink: 0; }
+        .btn-back:hover { background: #dee2e6; }
         .btn-back:active { transform: scale(0.9); }
 
-        .btn-share-native { background-color: #f8f9fa; color: #0d6efd; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #dee2e6; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; }
+        .btn-share-native { background-color: #f8f9fa; color: #0d6efd; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #dee2e6; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; flex-shrink: 0; }
         .btn-share-native:active { transform: scale(0.9); }
 
-        .btn-whatsapp-desktop { background-color: #25D366; color: white; font-weight: 700; border: none; border-radius: 50px; padding: 14px; text-decoration: none; display: block; text-align: center; transition: background 0.3s; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
-        .btn-whatsapp-desktop:hover { background-color: #1ebc57; color: white; }
-        
-        .btn-whatsapp-mobile { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 1050; background-color: #25D366; color: white; padding: 14px 30px; border-radius: 50px; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); font-weight: 700; font-size: 1rem; text-decoration: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; transition: transform 0.2s; }
+        .btn-whatsapp-desktop { background: linear-gradient(135deg, #25D366, #1ebc57); color: white; font-weight: 700; border: none; border-radius: 50px; padding: 16px; text-decoration: none; display: block; text-align: center; transition: all 0.3s; font-size: 1.05rem; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35); }
+        .btn-whatsapp-desktop:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(37, 211, 102, 0.45); color: white; }
+
+        .btn-whatsapp-mobile { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 1050; background: linear-gradient(135deg, #25D366, #1ebc57); color: white; padding: 14px 30px; border-radius: 50px; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); font-weight: 700; font-size: 1rem; text-decoration: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; transition: transform 0.2s; }
         .btn-whatsapp-mobile:active { transform: translateX(-50%) scale(0.95); }
 
         .btn-subtle { background-color: transparent; border: 1px solid #ced4da; color: #6c757d; border-radius: 50px; padding: 10px 20px; font-size: 0.9rem; width: 100%; display: block; text-align: center; text-decoration: none; transition: all 0.3s; margin-top: 20px; }
         .btn-subtle:hover { background-color: #e9ecef; border-color: #adb5bd; color: #495057; }
+
+        /* Badge oferta mejorado */
+        .badge-oferta-hero { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; padding: 4px 12px; border-radius: 50px; font-weight: 800; font-size: 0.7rem; box-shadow: 0 4px 10px rgba(255,75,43,0.3); }
+
+        /* Animación entrada secciones */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in-up { animation: fadeInUp 0.4s ease forwards; }
+        .fade-in-up:nth-child(2) { animation-delay: 0.05s; }
+        .fade-in-up:nth-child(3) { animation-delay: 0.1s; }
+        .fade-in-up:nth-child(4) { animation-delay: 0.15s; }
 
         .search-container { max-width: 500px; margin: 0 auto 15px auto; position: relative; width: 100%; }
         @media (min-width: 992px) {
@@ -345,70 +385,74 @@ if ($singleTour) {
             <div class="text-center text-muted small mb-4" style="font-size:0.75rem;"><i class="fa-solid fa-hand-pointer"></i> Desliza o toca para ampliar</div>
         <?php endif; ?>
 
-        <div class="card card-price p-3 mb-4">
-            <div class="row g-0 text-center">
-                <div class="col-6 border-end pe-2 d-flex flex-column justify-content-center">
-                    <span class="text-uppercase text-muted fw-bold" style="font-size:0.65rem;">Adulto <small class="fw-normal">(<?= $singleTour['rango_adulto'] ?? '' ?>)</small></span>
-                    <div class="my-1" style="min-height: 45px; display: flex; flex-direction: column; justify-content: center;">
-                        <?php if($usarPromo): ?>
-                            <span class="price-old">$<?= number_format($precioBase) ?></span>
-                        <?php endif; ?>
-                        <span class="price-cop-highlight">$<?= number_format($precioFinalCalc) ?></span>
-                    </div>
-                    <div class="d-flex flex-column gap-1 mt-1">
-                        <span class="price-usd small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD $<?= precio_inteligente($precioFinalCalc / $tasa_tuya_usd) ?></span>
-                        <span class="price-brl small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL R$<?= precio_inteligente($precioFinalCalc / $tasa_tuya_brl) ?></span>
-                    </div>
-                </div>
-                <div class="col-6 ps-2 d-flex flex-column justify-content-center">
-                    <span class="text-uppercase text-muted fw-bold" style="font-size:0.65rem;">Niño <small class="fw-normal">(<?= $singleTour['rango_nino'] ?? '' ?>)</small></span>
-                    <?php if(!empty($singleTour['precio_nino'])): ?>
-                        <div class="my-1" style="min-height: 45px; display: flex; flex-direction: column; justify-content: center;">
-                            <span class="price-cop-highlight">$<?= number_format($singleTour['precio_nino']) ?></span>
-                        </div>
-                        <div class="d-flex flex-column gap-1 mt-1">
-                            <span class="price-usd small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD $<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_usd) ?></span>
-                            <span class="price-brl small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL R$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_brl) ?></span>
-                        </div>
-                    <?php else: ?>
-                        <div class="text-muted mt-3 small" style="min-height: 45px; display: flex; align-items: center; justify-content: center;">- No aplica -</div>
+        <!-- TARJETA DE PRECIOS MEJORADA -->
+        <div class="price-card-hero fade-in-up">
+            <?php if($usarPromo): ?>
+                <div class="mb-2"><span class="badge-oferta-hero"><i class="fa-solid fa-bolt"></i> OFERTA ESPECIAL</span></div>
+            <?php endif; ?>
+            <div class="d-flex align-items-stretch">
+                <!-- ADULTOS -->
+                <div class="flex-fill">
+                    <span class="price-label">Adulto <?= !empty($singleTour['rango_adulto']) ? '('.$singleTour['rango_adulto'].')' : '' ?></span>
+                    <?php if($usarPromo): ?>
+                        <span class="price-old">$<?= number_format($precioBase) ?> COP</span>
                     <?php endif; ?>
+                    <span class="price-cop-highlight">$<?= number_format($precioFinalCalc) ?> <small style="font-size:0.85rem;font-weight:500;color:#64748b;">COP</small></span>
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        <span class="currency-pill usd"><img src="https://flagcdn.com/w40/us.png" class="flag-icon">USD $<?= precio_inteligente($precioFinalCalc / $tasa_tuya_usd) ?></span>
+                        <span class="currency-pill brl"><img src="https://flagcdn.com/w40/br.png" class="flag-icon">BRL R$<?= precio_inteligente($precioFinalCalc / $tasa_tuya_brl) ?></span>
+                    </div>
                 </div>
+                <?php if(!empty($singleTour['precio_nino'])): ?>
+                <!-- Divider -->
+                <div class="price-divider"></div>
+                <!-- NIÑOS -->
+                <div class="flex-fill ps-2">
+                    <span class="price-label">Niño <?= !empty($singleTour['rango_nino']) ? '('.$singleTour['rango_nino'].')' : '' ?></span>
+                    <span class="price-cop-highlight">$<?= number_format($singleTour['precio_nino']) ?> <small style="font-size:0.85rem;font-weight:500;color:#64748b;">COP</small></span>
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        <span class="currency-pill usd"><img src="https://flagcdn.com/w40/us.png" class="flag-icon">USD $<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_usd) ?></span>
+                        <span class="currency-pill brl"><img src="https://flagcdn.com/w40/br.png" class="flag-icon">BRL R$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_brl) ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
-            <div class="border-top mt-3 pt-2 text-center">
-                <div class="conversion-info justify-content-center">
-                    <span><i class="fa-solid fa-circle-info me-1"></i> Tasas hoy:</span>
-                    <span>USD: <strong>$<?= number_format($tasa_tuya_usd, 0) ?></strong></span>
-                    <span>BRL: <strong>$<?= number_format($tasa_tuya_brl, 0) ?></strong></span>
-                </div>
+            <div class="rates-footnote">
+                <i class="fa-regular fa-clock"></i> Tasas del día — USD: <strong>$<?= number_format($tasa_tuya_usd, 0) ?></strong> &nbsp;|&nbsp; BRL: <strong>$<?= number_format($tasa_tuya_brl, 0) ?></strong> COP
             </div>
         </div>
 
-        <div class="info-box">
-            <?php if(!empty($desc)): ?>
-                <div class="text-secondary mb-4" style="white-space: pre-line; line-height: 1.6; font-size: 0.9rem;">
-                    <?= htmlspecialchars($desc) ?>
-                </div>
-                <hr class="opacity-10 my-4">
-            <?php endif; ?>
+        <?php if(!empty($desc)): ?>
+        <div class="info-box fade-in-up">
+            <div id="descWrapper" class="desc-text desc-collapsed"><?= htmlspecialchars($desc) ?></div>
+            <button class="btn-leer-mas" id="btnLeerMas" onclick="toggleDesc()">
+                <i class="fa-solid fa-chevron-down" id="iconLeerMas"></i> Leer m&aacute;s
+            </button>
+        </div>
+        <?php endif; ?>
 
-            <div class="row g-4">
-                <div class="col-12 col-md-6 border-bottom border-md-0 pb-3 pb-md-0">
-                    <h6 class="text-dark mb-3 small"><i class="fa-solid fa-circle-check text-success"></i> Incluye</h6>
-                    <ul class="list-check ps-0 m-0 text-secondary">
-                        <?php foreach(explode("\n", $inc) as $item): if(trim($item)=='')continue; ?>
-                            <li style="font-size: 0.85rem;"><i class="fa-solid fa-check text-success"></i> <?= htmlspecialchars($item) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
+        <div class="info-box fade-in-up">
+            <div class="row g-3">
+                <?php if(!empty(trim($inc))): ?>
                 <div class="col-12 col-md-6">
-                    <h6 class="text-dark mb-3 small"><i class="fa-solid fa-circle-xmark text-danger"></i> No incluye</h6>
-                    <ul class="list-check ps-0 m-0 text-secondary">
-                        <?php foreach(explode("\n", $no_inc) as $item): if(trim($item)=='')continue; ?>
-                            <li style="font-size: 0.85rem;"><i class="fa-solid fa-xmark text-danger"></i> <?= htmlspecialchars($item) ?></li>
+                    <span class="section-pill incluye"><i class="fa-solid fa-circle-check"></i> Incluye</span>
+                    <ul class="list-check incluye-list ps-0 m-0 text-secondary">
+                        <?php foreach(explode("\n", $inc) as $item): if(trim($item)=='')continue; ?>
+                            <li><i class="fa-solid fa-check text-success me-2"></i><?= htmlspecialchars($item) ?></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
+                <?php endif; ?>
+                <?php if(!empty(trim($no_inc))): ?>
+                <div class="col-12 col-md-6">
+                    <span class="section-pill no-incluye"><i class="fa-solid fa-circle-xmark"></i> No incluye</span>
+                    <ul class="list-check no-incluye-list ps-0 m-0 text-secondary">
+                        <?php foreach(explode("\n", $no_inc) as $item): if(trim($item)=='')continue; ?>
+                            <li><i class="fa-solid fa-xmark text-danger me-2"></i><?= htmlspecialchars($item) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -429,18 +473,38 @@ if ($singleTour) {
         </div>
         <?php endif; ?>
 
-        <div class="calc-box mb-4">
+        <div class="calc-box mb-4 fade-in-up">
             <h6 class="fw-bold mb-4 text-center text-secondary small"><i class="fa-solid fa-calculator me-2"></i>Calcular Total</h6>
             <div class="row g-3 justify-content-center">
-                <div class="col-5"><label class="small text-muted mb-2 d-block text-center fw-bold" style="font-size: 0.65rem;">ADULTOS</label><input type="number" id="qtyAdult" class="form-control form-control-qty shadow-sm" value="1" min="1"></div>
-                <div class="col-5"><label class="small text-muted mb-2 d-block text-center fw-bold" style="font-size: 0.65rem;">NIÑOS</label><input type="number" id="qtyKid" class="form-control form-control-qty shadow-sm" value="0" min="0" <?= empty($singleTour['precio_nino']) ? 'disabled' : '' ?>></div>
+                <div class="col-6">
+                    <label class="price-label d-block text-center mb-2">ADULTOS</label>
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="changeQty('qtyAdult', -1)" type="button">&#8722;</button>
+                        <input type="number" id="qtyAdult" class="qty-val" value="1" min="1" oninput="calc()">
+                        <button class="qty-btn" onclick="changeQty('qtyAdult', 1)" type="button">&#43;</button>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <label class="price-label d-block text-center mb-2">NI&Ntilde;OS</label>
+                    <div class="qty-control" <?= empty($singleTour['precio_nino']) ? 'style="opacity:0.4;pointer-events:none"' : '' ?>>
+                        <button class="qty-btn" onclick="changeQty('qtyKid', -1)" type="button">&#8722;</button>
+                        <input type="number" id="qtyKid" class="qty-val" value="0" min="0" oninput="calc()">
+                        <button class="qty-btn" onclick="changeQty('qtyKid', 1)" type="button">&#43;</button>
+                    </div>
+                </div>
             </div>
             <div class="total-display text-center">
-                <div class="small text-uppercase text-secondary mb-1 fw-bold" style="font-size: 0.7rem;">Total a Pagar</div>
-                <div class="fw-bold text-dark fs-2 lh-1 mb-3" id="totalCOP">$<?= number_format($precioFinalCalc) ?></div>
-                <div class="row pt-3 border-top border-primary-subtle">
-                    <div class="col-6 border-end border-primary-subtle"><div class="currency-tag text-success mb-1" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> Dollars</div><div class="fw-bold text-success fs-5" id="totalUSD">$0</div></div>
-                    <div class="col-6"><div class="currency-tag text-primary mb-1" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> Reais</div><div class="fw-bold text-primary fs-5" id="totalBRL">R$ 0</div></div>
+                <div class="price-label mb-1">TOTAL A PAGAR</div>
+                <div class="total-cop-num mb-3" id="totalCOP">$<?= number_format($precioFinalCalc) ?></div>
+                <div class="d-flex gap-3">
+                    <div class="total-currency-pill">
+                        <div style="font-size:0.7rem;color:#166534;font-weight:700;margin-bottom:2px;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD</div>
+                        <div class="fw-bold text-success" style="font-size:1.1rem;" id="totalUSD">$0</div>
+                    </div>
+                    <div class="total-currency-pill">
+                        <div style="font-size:0.7rem;color:#1e40af;font-weight:700;margin-bottom:2px;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL</div>
+                        <div class="fw-bold text-primary" style="font-size:1.1rem;" id="totalBRL">R$ 0</div>
+                    </div>
                 </div>
             </div>
             
@@ -485,9 +549,28 @@ if ($singleTour) {
             dCOP.innerText = fmt(t);
             dUSD.innerText = '$' + pInt(t/rateUsd);
             dBRL.innerText = 'R$ ' + pInt(t/rateBrl);
+            // Animación pulso en total
+            dCOP.style.transform = 'scale(1.06)';
+            setTimeout(() => dCOP.style.transform = 'scale(1)', 150);
         }
-        inputAdult.addEventListener('input', calc); inputKid.addEventListener('input', calc);
+        function changeQty(id, delta) {
+            const el = document.getElementById(id);
+            const min = parseInt(el.min) || 0;
+            el.value = Math.max(min, (parseInt(el.value) || 0) + delta);
+            calc();
+        }
         calc();
+
+        // Descripción expandible
+        function toggleDesc() {
+            const wrap = document.getElementById('descWrapper');
+            const btn = document.getElementById('btnLeerMas');
+            const icon = document.getElementById('iconLeerMas');
+            const collapsed = wrap.classList.toggle('desc-collapsed');
+            btn.innerHTML = collapsed
+                ? '<i class="fa-solid fa-chevron-down" id="iconLeerMas"></i> Leer más'
+                : '<i class="fa-solid fa-chevron-up" id="iconLeerMas"></i> Leer menos';
+        }
 
         // --- GALERIA INTERACTIVA (SLIDER / SWIPE) ---
         
