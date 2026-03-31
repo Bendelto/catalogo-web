@@ -1,0 +1,698 @@
+<?php
+// 1. CONFIGURACIÓN
+$fileConfig = 'config.json';
+$config = file_exists($fileConfig) ? json_decode(file_get_contents($fileConfig), true) : ['margen_usd' => 200, 'margen_brl' => 200];
+$margen_usd = $config['margen_usd']; $margen_brl = $config['margen_brl'];
+
+// 2. MONEDA
+$cacheFile = 'tasa.json';
+if (!file_exists($cacheFile) || (time() - filemtime($cacheFile)) > 43200) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, "https://open.er-api.com/v6/latest/COP");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3); // 3 seconds timeout
+    $response = curl_exec($ch);
+    curl_close($ch);
+    if($response) file_put_contents($cacheFile, $response, LOCK_EX);
+}
+$rates = json_decode(file_get_contents($cacheFile), true);
+$tasa_tuya_usd = (1 / $rates['rates']['USD']) - $margen_usd;
+$tasa_tuya_brl = (1 / $rates['rates']['BRL']) - $margen_brl;
+
+function precio_inteligente($valor) { return (float)(ceil($valor * 2) / 2); }
+
+// 3. DATOS
+try {
+    $db = new PDO('sqlite:' . __DIR__ . '/database.sqlite');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $stmt = $db->query("SELECT * FROM tours ORDER BY nombre COLLATE NOCASE ASC");
+    $tours = [];
+    foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $t) {
+        if(!empty($t['galeria'])) $t['galeria'] = json_decode($t['galeria'], true);
+        else $t['galeria'] = [];
+        $tours[$t['slug']] = $t;
+    }
+} catch(PDOException $e) { $tours = []; }
+
+$request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$base_path = dirname($_SERVER['SCRIPT_NAME']);
+if($base_path == '/') $base_path = '';
+$slug_solicitado = trim(str_replace($base_path, '', $request_uri), '/');
+
+$singleTour = null;
+if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
+    if (empty($tours[$slug_solicitado]['oculto']) || $tours[$slug_solicitado]['oculto'] == false) {
+        $singleTour = $tours[$slug_solicitado];
+    }
+}
+
+// 4. VARIABLES DE VISTA
+$currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+$waLink = "";
+
+if ($singleTour) {
+    $desc = $singleTour['descripcion'] ?? $singleTour['description'] ?? '';
+    $inc = $singleTour['incluye'] ?? $singleTour['include'] ?? '';
+    $no_inc = $singleTour['no_incluye'] ?? $singleTour['not_include'] ?? '';
+    $info_adicional = $singleTour['info_adicional'] ?? '';
+
+    // PRECIOS
+    $precioBase = $singleTour['precio_cop'];
+    $precioPromo = $singleTour['precio_promo'] ?? 0;
+    $usarPromo = ($precioPromo > 0 && $precioPromo < $precioBase);
+    $precioFinalCalc = $usarPromo ? $precioPromo : $precioBase;
+
+    // SEO
+    $metaTitle = $singleTour['nombre'];
+    $metaDesc = !empty($desc) ? substr(strip_tags($desc), 0, 150) . "..." : "Reserva este tour en Cartagena.";
+    if(!empty($singleTour['imagen'])) {
+        $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+        $metaImage = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . "/" . $singleTour['imagen'];
+    }
+
+    // WHATSAPP & EMAIL
+    $mensaje  = "Hola Descubre Cartagena, me gustaría reservar: \n\n";
+    $mensaje .= "📍 *" . $singleTour['nombre'] . "*\n";
+    $mensaje .= "🔗 " . $currentUrl;
+    $waLink = "https://wa.me/573205899997?text=" . urlencode($mensaje);
+    
+    $mailSubj = "Nueva Reserva: " . $singleTour['nombre'];
+    $mailBody = "Hola,\n\nMe gustaría consultar/reservar el siguiente tour:\n\nTour: " . $singleTour['nombre'] . "\nEnlace: " . $currentUrl . "\n\nQuedo atento a su respuesta para gestionar la reserva.\n\nGracias.";
+    $mailLink = "mailto:info@descubrecartagena.com?subject=" . rawurlencode($mailSubj) . "&body=" . rawurlencode($mailBody);
+} else {
+    $metaTitle = "Descubre Cartagena";
+    $metaDesc = "Los mejores tours y experiencias en Cartagena de Indias.";
+}
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title><?= htmlspecialchars($metaTitle) ?></title>
+    <meta name="description" content="<?= htmlspecialchars($metaDesc) ?>">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?= $currentUrl ?>">
+    <meta property="og:title" content="<?= htmlspecialchars($metaTitle) ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($metaDesc) ?>">
+    <?php if(isset($metaImage)): ?><meta property="og:image" content="<?= $metaImage ?>"><?php endif; ?>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Poppins', sans-serif; color: #333; padding-bottom: 40px; }
+        .main-container { max-width: 1200px; margin: 0 auto; }
+        
+        /* --- CONTENEDOR VISTA TOUR --- */
+        .calc-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding-bottom: 80px; 
+        }
+        /* Aumento del 20% solo en escritorio */
+        @media (min-width: 992px) {
+            .calc-container {
+                max-width: 720px;
+            }
+        }
+        /* ---------------------------- */
+
+        /* --- HEADER --- */
+        .site-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            padding: 15px 0;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .main-logo {
+            width: 180px;
+            max-width: 65%;
+            height: auto;
+            display: inline-block;
+        }
+
+        @media (min-width: 992px) {
+            .site-header { 
+                padding: 20px 0; 
+            }
+            .main-logo { 
+                width: 250px; 
+                max-width: 100%;
+                display: block;
+            }
+        }
+        /* --- FIN HEADER --- */
+
+        .card-price { border: 0; border-radius: 16px; box-shadow: 0 10px 30px -4px rgba(0,0,0,0.08); text-decoration: none; color: inherit; display: block; background: white; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); overflow: hidden; height: 100%; position: relative; }
+        .card-price:hover { box-shadow: 0 20px 40px -4px rgba(0,0,0,0.12); transform: translateY(-8px); }
+        .tour-img-list { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid #f0f0f0; transition: transform 0.5s ease; }
+        .card-price:hover .tour-img-list { transform: scale(1.05); }
+        .badge-oferta { position: absolute; top: 10px; right: 10px; background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; padding: 5px 12px; border-radius: 50px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 4px 10px rgba(255,75,43,0.3); z-index: 2; }
+
+        .gallery-reel-container { width: 100%; overflow-x: auto; display: flex; gap: 10px; padding-bottom: 10px; scroll-snap-type: x mandatory; margin-bottom: 15px; }
+        .gallery-reel-item { height: 38vh; width: auto; max-width: none; border-radius: 12px; scroll-snap-align: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: zoom-in; background: #fff; }
+        @media (min-width: 768px) { .gallery-reel-item { height: 350px; } }
+        
+        /* ESTILOS LIGHTBOX */
+        #lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; user-select: none; }
+        #lightbox img { max-width: 90%; max-height: 85vh; object-fit: contain; pointer-events: none; }
+        
+        /* Flechas de navegación */
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 3rem;
+            cursor: pointer;
+            padding: 20px;
+            z-index: 10001;
+            transition: color 0.3s;
+        }
+        .lightbox-nav:hover { color: #fff; }
+        .lightbox-nav.prev { left: 5px; }
+        .lightbox-nav.next { right: 5px; }
+        
+        @media (max-width: 576px) {
+            .lightbox-nav { font-size: 2rem; padding: 10px; }
+        }
+
+        .info-box { background: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.03); }
+        .list-check li { list-style: none; padding-left: 0; margin-bottom: 8px; font-size: 0.95rem; }
+        
+        .accordion-item { border: 0; border-radius: 12px !important; overflow: hidden; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .accordion-button:not(.collapsed) { background-color: #f1f8ff; color: #0d6efd; font-weight: 600; }
+
+        h4, h6, .tour-title { font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; }
+        
+        .price-cop-highlight { color: #1a1a1a; font-weight: 700; font-size: 1.25rem; display: block; line-height: 1.1; }
+        .price-old { text-decoration: line-through; color: #999; font-size: 0.8rem; font-weight: 400; display: block; margin-bottom: 2px; }
+        
+        .flag-icon { width: 22px !important; height: auto; vertical-align: middle; margin-right: 6px; box-shadow: none; flex-shrink: 0; }
+        
+        .calc-box { background-color: #fff; border-radius: 12px; padding: 20px; border: 1px solid #edf2f7; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .form-control-qty { text-align: center; font-weight: bold; background: #f8f9fa; height: 50px; font-size: 1.3rem; font-family: 'Poppins', sans-serif; }
+        .total-display { background-color: #e7f1ff; color: #0d6efd; border: 1px solid #cce5ff; border-radius: 12px; padding: 20px; margin-top: 20px; }
+        
+        .btn-back { background-color: #e9ecef; color: #333; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: bold; transition: transform 0.2s; }
+        .btn-back:active { transform: scale(0.9); }
+
+        .btn-share-native { background-color: #f8f9fa; color: #0d6efd; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #dee2e6; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; }
+        .btn-share-native:active { transform: scale(0.9); }
+
+        .btn-whatsapp-desktop { background-color: #25D366; color: white; font-weight: 700; border: none; border-radius: 50px; padding: 14px; text-decoration: none; display: block; text-align: center; transition: background 0.3s; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+        .btn-whatsapp-desktop:hover { background-color: #1ebc57; color: white; }
+        
+        .btn-whatsapp-mobile { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 1050; background-color: #25D366; color: white; padding: 14px 30px; border-radius: 50px; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); font-weight: 700; font-size: 1rem; text-decoration: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; transition: transform 0.2s; }
+        .btn-whatsapp-mobile:active { transform: translateX(-50%) scale(0.95); }
+
+        .btn-subtle { background-color: transparent; border: 1px solid #ced4da; color: #6c757d; border-radius: 50px; padding: 10px 20px; font-size: 0.9rem; width: 100%; display: block; text-align: center; text-decoration: none; transition: all 0.3s; margin-top: 20px; }
+        .btn-subtle:hover { background-color: #e9ecef; border-color: #adb5bd; color: #495057; }
+
+        .search-container { max-width: 500px; margin: 0 auto 15px auto; position: relative; width: 100%; }
+        @media (min-width: 992px) {
+            .search-container.in-header {
+                margin: 0;
+                width: 400px;
+            }
+        }
+
+        .search-input { width: 100%; padding: 14px 20px 14px 50px; border-radius: 50px; border: 1px solid #eee; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.03); outline: none; transition: all 0.3s ease; font-size: 1rem; font-family: 'Poppins', sans-serif; }
+        .search-input:focus { border-color: #0d6efd; box-shadow: 0 8px 25px rgba(13, 110, 253, 0.15); transform: translateY(-1px); }
+        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #bbb; font-size: 1.1rem; }
+        
+        /* ESTILOS NUEVA BARRA DE FILTROS */
+        .controls-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            border: 1px solid #eee;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        @media (min-width: 768px) {
+            .controls-bar {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+        .sort-select {
+            border: 1px solid #dee2e6;
+            border-radius: 50px;
+            padding: 8px 30px 8px 15px;
+            font-size: 0.9rem;
+            color: #495057;
+            font-family: 'Poppins', sans-serif;
+            background-color: #fff;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        .filter-switches {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .form-check-label {
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: none;
+            color: #555;
+        }
+
+        .conversion-info { font-size: 0.75rem; color: #777; display: flex; align-items: center; gap: 8px; }
+        .conversion-info strong { color: #444; }
+    </style>
+    <div class="gtranslate_wrapper"></div>
+<script>window.gtranslateSettings = {"default_language":"es","native_language_names":true,"detect_browser_language":true,"url_structure":"sub_domain","languages":["es","pt","en","it","fr","de"],"wrapper_selector":".gtranslate_wrapper","switcher_horizontal_position":"right","switcher_vertical_position":"top","float_switcher_open_direction":"bottom","alt_flags":{"en":"usa","pt":"brazil","es":"colombia"}}</script>
+<script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+</head>
+<body>
+
+<div class="site-header">
+    <div class="container main-container d-lg-flex justify-content-between align-items-center">
+        <div class="text-start mb-3 mb-lg-0">
+            <a href="./">
+                <img src="logo.svg" alt="Descubre Cartagena" class="main-logo">
+            </a>
+        </div>
+        
+        <?php if (!$singleTour): ?>
+            <div class="search-container in-header">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="¿Qué te gustaría hacer?">
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div id="lightbox">
+    <button class="lightbox-nav prev" onclick="changeImg(-1)">&#10094;</button>
+    <img id="lightbox-img" src="">
+    <button class="lightbox-nav next" onclick="changeImg(1)">&#10095;</button>
+</div>
+
+<div class="container main-container">
+<?php if ($singleTour): ?>
+    <div class="calc-container">
+        
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3" style="flex: 1;">
+                <a href="./" class="btn-back"><i class="fa-solid fa-arrow-left"></i></a>
+                <h4 class="mb-0 lh-sm" style="font-size: 1.15rem;"><?= htmlspecialchars($singleTour['nombre']) ?></h4>
+            </div>
+            <button class="btn-share-native ms-2" onclick="shareNative()" title="Compartir">
+                <i class="fa-solid fa-share-nodes"></i>
+            </button>
+        </div>
+
+        <?php 
+            $imagenesParaMostrar = [];
+            if(!empty($singleTour['imagen'])) $imagenesParaMostrar[] = $singleTour['imagen'];
+            if(!empty($singleTour['galeria'])) foreach($singleTour['galeria'] as $gImg) $imagenesParaMostrar[] = $gImg;
+        ?>
+        <?php if(count($imagenesParaMostrar) > 0): ?>
+            <div class="gallery-reel-container">
+                <?php foreach($imagenesParaMostrar as $idx => $imgSrc): ?>
+                    <img src="<?= $imgSrc ?>" class="gallery-reel-item" onclick="openLightbox(<?= $idx ?>)" alt="Foto">
+                <?php endforeach; ?>
+            </div>
+            <div class="text-center text-muted small mb-4" style="font-size:0.75rem;"><i class="fa-solid fa-hand-pointer"></i> Desliza o toca para ampliar</div>
+        <?php endif; ?>
+
+        <div class="card card-price p-3 mb-4">
+            <div class="row g-0 text-center">
+                <div class="col-6 border-end pe-2 d-flex flex-column justify-content-center">
+                    <span class="text-uppercase text-muted fw-bold" style="font-size:0.65rem;">Adulto <small class="fw-normal">(<?= $singleTour['rango_adulto'] ?? '' ?>)</small></span>
+                    <div class="my-1" style="min-height: 45px; display: flex; flex-direction: column; justify-content: center;">
+                        <?php if($usarPromo): ?>
+                            <span class="price-old">$<?= number_format($precioBase) ?></span>
+                        <?php endif; ?>
+                        <span class="price-cop-highlight">$<?= number_format($precioFinalCalc) ?></span>
+                    </div>
+                    <div class="d-flex flex-column gap-1 mt-1">
+                        <span class="price-usd small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD $<?= precio_inteligente($precioFinalCalc / $tasa_tuya_usd) ?></span>
+                        <span class="price-brl small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL R$<?= precio_inteligente($precioFinalCalc / $tasa_tuya_brl) ?></span>
+                    </div>
+                </div>
+                <div class="col-6 ps-2 d-flex flex-column justify-content-center">
+                    <span class="text-uppercase text-muted fw-bold" style="font-size:0.65rem;">Niño <small class="fw-normal">(<?= $singleTour['rango_nino'] ?? '' ?>)</small></span>
+                    <?php if(!empty($singleTour['precio_nino'])): ?>
+                        <div class="my-1" style="min-height: 45px; display: flex; flex-direction: column; justify-content: center;">
+                            <span class="price-cop-highlight">$<?= number_format($singleTour['precio_nino']) ?></span>
+                        </div>
+                        <div class="d-flex flex-column gap-1 mt-1">
+                            <span class="price-usd small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD $<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_usd) ?></span>
+                            <span class="price-brl small" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL R$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_brl) ?></span>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-muted mt-3 small" style="min-height: 45px; display: flex; align-items: center; justify-content: center;">- No aplica -</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="border-top mt-3 pt-2 text-center">
+                <div class="conversion-info justify-content-center">
+                    <span><i class="fa-solid fa-circle-info me-1"></i> Tasas hoy:</span>
+                    <span>USD: <strong>$<?= number_format($tasa_tuya_usd, 0) ?></strong></span>
+                    <span>BRL: <strong>$<?= number_format($tasa_tuya_brl, 0) ?></strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <?php if(!empty($desc)): ?>
+                <div class="text-secondary mb-4" style="white-space: pre-line; line-height: 1.6; font-size: 0.9rem;">
+                    <?= htmlspecialchars($desc) ?>
+                </div>
+                <hr class="opacity-10 my-4">
+            <?php endif; ?>
+
+            <div class="row g-4">
+                <div class="col-12 col-md-6 border-bottom border-md-0 pb-3 pb-md-0">
+                    <h6 class="text-dark mb-3 small"><i class="fa-solid fa-circle-check text-success"></i> Incluye</h6>
+                    <ul class="list-check ps-0 m-0 text-secondary">
+                        <?php foreach(explode("\n", $inc) as $item): if(trim($item)=='')continue; ?>
+                            <li style="font-size: 0.85rem;"><i class="fa-solid fa-check text-success"></i> <?= htmlspecialchars($item) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <div class="col-12 col-md-6">
+                    <h6 class="text-dark mb-3 small"><i class="fa-solid fa-circle-xmark text-danger"></i> No incluye</h6>
+                    <ul class="list-check ps-0 m-0 text-secondary">
+                        <?php foreach(explode("\n", $no_inc) as $item): if(trim($item)=='')continue; ?>
+                            <li style="font-size: 0.85rem;"><i class="fa-solid fa-xmark text-danger"></i> <?= htmlspecialchars($item) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <?php if(!empty($info_adicional)): ?>
+        <div class="accordion accordion-flush mb-4" id="accordionExtras">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInfo">
+                        <i class="fa-solid fa-circle-info me-2 text-primary"></i> Información Adicional
+                    </button>
+                </h2>
+                <div id="collapseInfo" class="accordion-collapse collapse" data-bs-parent="#accordionExtras">
+                    <div class="accordion-body text-secondary" style="font-size: 0.85rem;">
+                        <?= $info_adicional ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <div class="calc-box mb-4">
+            <h6 class="fw-bold mb-4 text-center text-secondary small"><i class="fa-solid fa-calculator me-2"></i>Calcular Total</h6>
+            <div class="row g-3 justify-content-center">
+                <div class="col-5"><label class="small text-muted mb-2 d-block text-center fw-bold" style="font-size: 0.65rem;">ADULTOS</label><input type="number" id="qtyAdult" class="form-control form-control-qty shadow-sm" value="1" min="1"></div>
+                <div class="col-5"><label class="small text-muted mb-2 d-block text-center fw-bold" style="font-size: 0.65rem;">NIÑOS</label><input type="number" id="qtyKid" class="form-control form-control-qty shadow-sm" value="0" min="0" <?= empty($singleTour['precio_nino']) ? 'disabled' : '' ?>></div>
+            </div>
+            <div class="total-display text-center">
+                <div class="small text-uppercase text-secondary mb-1 fw-bold" style="font-size: 0.7rem;">Total a Pagar</div>
+                <div class="fw-bold text-dark fs-2 lh-1 mb-3" id="totalCOP">$<?= number_format($precioFinalCalc) ?></div>
+                <div class="row pt-3 border-top border-primary-subtle">
+                    <div class="col-6 border-end border-primary-subtle"><div class="currency-tag text-success mb-1" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> Dollars</div><div class="fw-bold text-success fs-5" id="totalUSD">$0</div></div>
+                    <div class="col-6"><div class="currency-tag text-primary mb-1" style="font-size: 0.75rem;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> Reais</div><div class="fw-bold text-primary fs-5" id="totalBRL">R$ 0</div></div>
+                </div>
+            </div>
+            
+            <div class="d-none d-md-block mt-4 text-center">
+                <a href="<?= $waLink ?>" target="_blank" class="btn-whatsapp-desktop shadow mb-3">
+                    <i class="fa-brands fa-whatsapp fa-lg me-2"></i> Reservar por WhatsApp
+                </a>
+                <a href="<?= $mailLink ?>" class="text-decoration-none text-muted small" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
+                    <i class="fa-regular fa-envelope me-1"></i> O reservar por correo electrónico
+                </a>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 mb-4 d-md-none">
+            <a href="<?= $mailLink ?>" class="text-decoration-none text-muted small">
+                <i class="fa-regular fa-envelope me-1"></i> O reservar por correo electrónico
+            </a>
+        </div>
+
+        <a href="./" class="btn-subtle mb-5">Ver todos los tours</a>
+        
+        <a href="<?= $waLink ?>" target="_blank" class="btn-whatsapp-mobile d-md-none">
+            <i class="fa-brands fa-whatsapp fa-lg me-2"></i> Reservar por WhatsApp
+        </a>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const priceAdult = <?= $precioFinalCalc ?>;
+        const priceKid = <?= $singleTour['precio_nino'] ?: 0 ?>;
+        const rateUsd = <?= $tasa_tuya_usd ?>; const rateBrl = <?= $tasa_tuya_brl ?>;
+        const inputAdult = document.getElementById('qtyAdult');
+        const inputKid = document.getElementById('qtyKid');
+        const dCOP = document.getElementById('totalCOP');
+        const dUSD = document.getElementById('totalUSD');
+        const dBRL = document.getElementById('totalBRL');
+        function fmt(n){ return '$' + new Intl.NumberFormat('es-CO').format(n); }
+        function pInt(v){ return Math.ceil(v * 2) / 2; }
+        function calc() {
+            let t = (parseInt(inputAdult.value)||0)*priceAdult + (parseInt(inputKid.value)||0)*priceKid;
+            dCOP.innerText = fmt(t);
+            dUSD.innerText = '$' + pInt(t/rateUsd);
+            dBRL.innerText = 'R$ ' + pInt(t/rateBrl);
+        }
+        inputAdult.addEventListener('input', calc); inputKid.addEventListener('input', calc);
+        calc();
+
+        // --- GALERIA INTERACTIVA (SLIDER / SWIPE) ---
+        
+        const galleryImages = <?= json_encode($imagenesParaMostrar) ?>;
+        let currentImgIndex = 0;
+
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        
+        function openLightbox(index) {
+            currentImgIndex = index;
+            updateLightboxImage();
+            lightbox.style.display = 'flex';
+        }
+
+        function updateLightboxImage() {
+            if(galleryImages.length > 0) {
+                lightboxImg.src = galleryImages[currentImgIndex];
+            }
+        }
+
+        function changeImg(step) {
+            currentImgIndex += step;
+            if(currentImgIndex >= galleryImages.length) currentImgIndex = 0;
+            if(currentImgIndex < 0) currentImgIndex = galleryImages.length - 1;
+            updateLightboxImage();
+        }
+
+        function closeLightbox() {
+            lightbox.style.display = 'none';
+        }
+        
+        lightbox.addEventListener('click', function(e){
+            // Cierra si el click fue en el fondo negro
+            if(e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        // --- LÓGICA DE SWIPE (TACTIL) ---
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        lightbox.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        lightbox.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            if (touchStartX - touchEndX > 50) {
+                changeImg(1);
+            }
+            if (touchEndX - touchStartX > 50) {
+                changeImg(-1);
+            }
+        }
+
+        function shareNative() {
+            if (navigator.share) {
+                navigator.share({
+                    title: '<?= htmlspecialchars($singleTour['nombre']) ?>',
+                    text: '¡Mira este plan increíble en Cartagena!',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(function() {
+                    alert("¡Enlace copiado! Compártelo con tus amigos.");
+                });
+            }
+        }
+    </script>
+
+<?php else: ?>
+    
+    <div class="controls-bar">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-sort text-secondary"></i>
+            <select class="form-select border-0 bg-transparent shadow-none p-0 ps-1 fw-bold text-secondary" id="sortSelect" onchange="applyFilters()">
+                <option value="nombre_asc">Nombre (A-Z)</option>
+                <option value="precio_asc">Precio (Menor a Mayor)</option>
+                <option value="precio_desc">Precio (Mayor a Menor)</option>
+            </select>
+        </div>
+
+        <div class="filter-switches mt-2 mt-md-0">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterOfertas" onchange="applyFilters()">
+                <label class="form-check-label" for="filterOfertas">Solo Ofertas</label>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterNinos" onchange="applyFilters()">
+                <label class="form-check-label" for="filterNinos">Planes con Niños</label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4" id="toursGrid">
+        <?php foreach ($tours as $slug => $tour): 
+            if(!empty($tour['oculto']) && $tour['oculto'] == true) continue;
+            
+            $pBase = $tour['precio_cop'];
+            $pPromo = $tour['precio_promo'] ?? 0;
+            $esOferta = ($pPromo > 0 && $pPromo < $pBase);
+            $pFinal = $esOferta ? $pPromo : $pBase;
+            $tienePrecioNino = (!empty($tour['precio_nino']) && $tour['precio_nino'] > 0);
+        ?>
+        <div class="col-12 col-md-6 col-lg-4 tour-card-col" 
+             data-nombre="<?= htmlspecialchars($tour['nombre']) ?>" 
+             data-precio="<?= $pFinal ?>"
+             data-oferta="<?= $esOferta ? '1' : '0' ?>"
+             data-nino="<?= $tienePrecioNino ? '1' : '0' ?>">
+            <a href="./<?= $slug ?>" class="card card-price">
+                <?php if(!empty($tour['imagen'])): ?><img src="<?= $tour['imagen'] ?>" class="tour-img-list"><?php endif; ?>
+                
+                <?php if($esOferta): ?>
+                    <span class="badge-oferta">OFERTA</span>
+                <?php endif; ?>
+
+                <div class="p-4">
+                    <h6 class="fw-bold mb-3 text-dark lh-base tour-title" style="font-size: 1.1rem;"><?= htmlspecialchars($tour['nombre']) ?></h6>
+                    <div class="mb-3" style="min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
+                        <?php if($esOferta): ?>
+                            <span class="price-old" style="font-size: 0.75rem;">$<?= number_format($pBase) ?></span>
+                        <?php endif; ?>
+                        <span class="price-cop-highlight" style="font-size: 1.2rem;">
+                            $<?= number_format($pFinal) ?> <small class="text-muted fw-normal" style="font-size: 0.75rem;">COP</small>
+                        </span>
+                        <?php if(!empty($tour['rango_adulto'])): ?><div style="font-size:0.65rem;color:#999;font-weight:normal">(Adultos <?= $tour['rango_adulto'] ?>)</div><?php endif; ?>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top">
+                        <div class="d-flex flex-column gap-1">
+                            <div class="price-usd" style="font-size: 0.8rem;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD $<?= precio_inteligente($pFinal / $tasa_tuya_usd) ?></div>
+                            <div class="price-brl" style="font-size: 0.8rem;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL R$ <?= precio_inteligente($pFinal / $tasa_tuya_brl) ?></div>
+                        </div>
+                        <div class="text-primary fs-5"><i class="fa-solid fa-circle-arrow-right"></i></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endforeach; ?>
+    </div>
+
+    <script>
+        // Referencias elementos
+        const searchInput = document.getElementById('searchInput');
+        const sortSelect = document.getElementById('sortSelect');
+        const filterOfertas = document.getElementById('filterOfertas');
+        const filterNinos = document.getElementById('filterNinos');
+        const grid = document.getElementById('toursGrid');
+
+        // Escuchar el buscador
+        if(searchInput) {
+            searchInput.addEventListener('keyup', applyFilters);
+        }
+
+        // Función Maestra: Combina Buscador + Filtros + Orden
+        function applyFilters() {
+            const cards = Array.from(grid.getElementsByClassName('tour-card-col'));
+            
+            // 1. Obtener valores
+            const searchText = searchInput ? searchInput.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+            const onlyOffers = filterOfertas.checked;
+            const onlyKids = filterNinos.checked;
+            const sortValue = sortSelect.value;
+
+            // 2. Filtrar (Mostrar/Ocultar)
+            cards.forEach(card => {
+                let show = true;
+                
+                // Texto Buscador
+                const title = card.querySelector('.tour-title').textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (searchText !== "" && title.indexOf(searchText) === -1) show = false;
+
+                // Checkbox Ofertas
+                if (onlyOffers && card.dataset.oferta !== '1') show = false;
+
+                // Checkbox Niños
+                if (onlyKids && card.dataset.nino !== '1') show = false;
+
+                card.style.display = show ? '' : 'none';
+            });
+
+            // 3. Ordenar (Solo los visibles se reordenan visualmente, pero ordenamos todo el array en el DOM)
+            cards.sort((a, b) => {
+                switch(sortValue) {
+                    case 'precio_asc':
+                        return parseFloat(a.dataset.precio) - parseFloat(b.dataset.precio);
+                    case 'precio_desc':
+                        return parseFloat(b.dataset.precio) - parseFloat(a.dataset.precio);
+                    case 'nombre_asc':
+                    default:
+                        return a.dataset.nombre.localeCompare(b.dataset.nombre);
+                }
+            });
+
+            // 4. Re-insertar en orden
+            cards.forEach(card => grid.appendChild(card));
+        }
+    </script>
+<?php endif; ?>
+
+</div>
+</body>
+</html>

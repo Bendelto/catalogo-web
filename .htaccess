@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # RewriteBase dinámico/desactivado para portabilidad
+
+    # 1. Reglas para /admin y /aliados
+    RewriteRule ^admin/?$ admin.php [L,NC]
+    RewriteRule ^aliados/?(.*)$ aliados.php?slug=$1 [QSA,L,NC]
+
+    # 2. Si el archivo o carpeta existe físicamente, úsalo directamente
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # 3. Todo lo demás (tours) mándalo a index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
