@@ -2,5 +2,5 @@ data.json
 config.json
 credenciales.json
 tasa.json
-img/
-img/*
+# Ignorar solo los ZIPs temporales generados por descargas de aliados
+img/*.zip
