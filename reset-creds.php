@@ -24,7 +24,7 @@ $creds = [
 if (file_put_contents($fileCreds, json_encode($creds)) !== false) {
     echo '<div style="font-family:monospace;padding:20px;background:#d4edda;border:1px solid #c3e6cb;border-radius:8px;">';
     echo '<h3>✅ Credenciales regeneradas correctamente</h3>';
-    echo '<p><strong>Usuario:</strong> admin</p>';
+    echo '<p><strong>Usuario:</strong> ' . htmlspecialchars($creds['usuario']) . '</p>';
     echo '<p><strong>Contraseña:</strong> ' . htmlspecialchars($nuevaClave) . '</p>';
     echo '<p><strong>Hash generado:</strong> ' . htmlspecialchars($creds['password']) . '</p>';
     echo '<hr><p style="color:red;font-weight:bold;">⚠️ ELIMINA ESTE ARCHIVO (reset-creds.php) DEL SERVIDOR INMEDIATAMENTE.</p>';
