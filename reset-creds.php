@@ -17,7 +17,7 @@ $fileCreds = __DIR__ . '/credenciales.json';
 $nuevaClave = 'Dc@6691400'; // Contraseña por defecto
 
 $creds = [
-    'usuario'  => 'admin',
+    'usuario'  => 'Benko',
     'password' => password_hash($nuevaClave, PASSWORD_DEFAULT),
 ];
 

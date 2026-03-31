@@ -4,7 +4,7 @@ session_start();
 // 1. CREDENCIALES
 $fileCreds = 'credenciales.json';
 if (!file_exists($fileCreds)) {
-    $defaultCreds = ['usuario' => 'admin', 'password' => password_hash('Dc@6691400', PASSWORD_DEFAULT)];
+    $defaultCreds = ['usuario' => 'Benko', 'password' => password_hash('Dc@6691400', PASSWORD_DEFAULT)];
     file_put_contents($fileCreds, json_encode($defaultCreds));
 }
 $creds = json_decode(file_get_contents($fileCreds), true);
