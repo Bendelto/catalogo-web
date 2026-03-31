@@ -16,13 +16,14 @@ if (isset($creds['password']) && !str_starts_with($creds['password'], '$2y$')) {
 }
 
 // 2. LOGIN
+$BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $errorMsg = '';
 if (isset($_POST['login'])) {
     $userInput = $_POST['user'] ?? '';
     $passInput = $_POST['pass'] ?? '';
     if ($userInput === $creds['usuario'] && password_verify($passInput, $creds['password'])) {
         $_SESSION['admin'] = true;
-        header("Location: admin.php");
+        header("Location: $BASE/admin");
         exit;
     } else {
         $errorMsg = 'Datos incorrectos';

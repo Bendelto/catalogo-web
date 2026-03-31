@@ -2,6 +2,9 @@
 /**
  * reset-creds.php — Script de uso único para regenerar credenciales
  * ELIMINAR ESTE ARCHIVO inmediatamente después de usarlo.
+ *
+ * URL de uso en producción:
+ *   https://descubrecartagena.com/catalogo/reset-creds.php?key=descubre2024reset
  */
 
 // Clave secreta para autorizar el reset (evita que cualquiera lo ejecute)

@@ -2,16 +2,21 @@
 session_start();
 $aliadosPass = 'AliadosDC';
 
+// Detectar base URL automáticamente (funciona en /catalogo-web local y /catalogo en producción)
+$BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+// Normalizar: si el script está en la raíz de la carpeta del proyecto, $BASE es la carpeta
+// En local: /catalogo-web  |  En producción: /catalogo
+
 if (isset($_GET['logout'])) {
     session_destroy();
-    header("Location: /catalogo-web/aliados");
+    header("Location: $BASE/aliados");
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pass'])) {
     if ($_POST['pass'] === $aliadosPass) {
         $_SESSION['aliado_auth'] = true;
-        header("Location: /catalogo-web/aliados");
+        header("Location: $BASE/aliados");
         exit;
     } else {
         $loginError = "Contraseña incorrecta";
@@ -258,10 +263,10 @@ if ($singleTour) {
     <div class="container main-container d-flex justify-content-between align-items-center">
         <div>
             <?php if ($singleTour): ?>
-                <a href="/catalogo-web/aliados" class="btn-back d-inline-flex me-2"><i class="fa-solid fa-arrow-left"></i></a>
+                <a href="<?= $BASE ?>/aliados" class="btn-back d-inline-flex me-2"><i class="fa-solid fa-arrow-left"></i></a>
             <?php endif; ?>
-            <a href="/catalogo-web/aliados">
-                <img src="/catalogo-web/logo.svg" alt="Descubre Cartagena" class="main-logo">
+            <a href="<?= $BASE ?>/aliados">
+                <img src="<?= $BASE ?>/logo.svg" alt="Descubre Cartagena" class="main-logo">
             </a>
             <span class="badge-b2b d-none d-md-inline-block"><i class="fa-solid fa-briefcase"></i> ALIADOS B2B</span>
         </div>
@@ -330,10 +335,10 @@ if ($singleTour) {
             <div class="gallery-download-grid">
                 <?php foreach($todasLasFotos as $idx => $fto): ?>
                     <div class="thumb-box">
-                        <img src="/catalogo-web/<?= $fto ?>">
+                        <img src="<?= $BASE ?>/<?= $fto ?>">
                         <div class="thumb-overlay">
                             <!-- Endpoint dedicado, libre del .htaccess -->
-                            <a href="/catalogo-web/aliados-descarga.php?slug_tour=<?= $singleTour['slug'] ?>&dl_foto=<?= $idx ?>" class="btn-dl-mini shadow" title="Descargar Imagen"><i class="fa-solid fa-download"></i></a>
+                            <a href="<?= $BASE ?>/aliados-descarga.php?slug_tour=<?= $singleTour['slug'] ?>&dl_foto=<?= $idx ?>" class="btn-dl-mini shadow" title="Descargar Imagen"><i class="fa-solid fa-download"></i></a>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -384,8 +389,8 @@ if ($singleTour) {
                 $pPublic = $tour['precio_cop'];
             ?>
             <div class="col-12 col-md-6 col-lg-4 tour-card-col">
-                <a href="/catalogo-web/aliados/<?= $slug ?>" class="card card-price">
-                    <?php if(!empty($tour['imagen'])): ?><img src="/catalogo-web/<?= $tour['imagen'] ?>" class="tour-img-list"><?php endif; ?>
+                <a href="<?= $BASE ?>/aliados/<?= $slug ?>" class="card card-price">
+                    <?php if(!empty($tour['imagen'])): ?><img src="<?= $BASE ?>/<?= $tour['imagen'] ?>" class="tour-img-list"><?php endif; ?>
                     
                     <div class="p-4">
                         <h6 class="fw-bold mb-3 text-dark lh-base tour-title" style="font-size: 1.1rem;"><?= htmlspecialchars($tour['nombre']) ?></h6>
