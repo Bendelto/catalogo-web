@@ -473,62 +473,98 @@ if ($singleTour) {
         </div>
         <?php endif; ?>
 
-        <div class="calc-box mb-4 fade-in-up">
-            <h6 class="fw-bold mb-4 text-center text-secondary small"><i class="fa-solid fa-calculator me-2"></i>Calcular Total</h6>
-            <div class="row g-3 justify-content-center">
-                <div class="col-6">
-                    <label class="price-label d-block text-center mb-2">ADULTOS</label>
-                    <div class="qty-control">
-                        <button class="qty-btn" onclick="changeQty('qtyAdult', -1)" type="button">&#8722;</button>
-                        <input type="number" id="qtyAdult" class="qty-val" value="1" min="1" oninput="calc()">
-                        <button class="qty-btn" onclick="changeQty('qtyAdult', 1)" type="button">&#43;</button>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <label class="price-label d-block text-center mb-2">NI&Ntilde;OS</label>
-                    <div class="qty-control" <?= empty($singleTour['precio_nino']) ? 'style="opacity:0.4;pointer-events:none"' : '' ?>>
-                        <button class="qty-btn" onclick="changeQty('qtyKid', -1)" type="button">&#8722;</button>
-                        <input type="number" id="qtyKid" class="qty-val" value="0" min="0" oninput="calc()">
-                        <button class="qty-btn" onclick="changeQty('qtyKid', 1)" type="button">&#43;</button>
-                    </div>
-                </div>
-            </div>
-            <div class="total-display text-center">
-                <div class="price-label mb-1">TOTAL A PAGAR</div>
-                <div class="total-cop-num mb-3" id="totalCOP">$<?= number_format($precioFinalCalc) ?></div>
-                <div class="d-flex gap-3">
-                    <div class="total-currency-pill">
-                        <div style="font-size:0.7rem;color:#166534;font-weight:700;margin-bottom:2px;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD</div>
-                        <div class="fw-bold text-success" style="font-size:1.1rem;" id="totalUSD">$0</div>
-                    </div>
-                    <div class="total-currency-pill">
-                        <div style="font-size:0.7rem;color:#1e40af;font-weight:700;margin-bottom:2px;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL</div>
-                        <div class="fw-bold text-primary" style="font-size:1.1rem;" id="totalBRL">R$ 0</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="d-none d-md-block mt-4 text-center">
-                <a href="<?= $waLink ?>" target="_blank" class="btn-whatsapp-desktop shadow mb-3">
-                    <i class="fa-brands fa-whatsapp fa-lg me-2"></i> Reservar por WhatsApp
-                </a>
-                <a href="<?= $mailLink ?>" class="text-decoration-none text-muted small" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
-                    <i class="fa-regular fa-envelope me-1"></i> O reservar por correo electrónico
-                </a>
-            </div>
+        <!-- BOTONES DE RESERVA EN PÁGINA (Activan el Modal) -->
+        <div class="d-none d-md-block mt-5 mb-3">
+            <button class="btn-whatsapp-desktop shadow w-100 py-3" style="font-size: 1.15rem;" data-bs-toggle="modal" data-bs-target="#reservaModal">
+                <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Reservar por WhatsApp
+            </button>
         </div>
 
-        <div class="text-center mt-3 mb-4 d-md-none">
-            <a href="<?= $mailLink ?>" class="text-decoration-none text-muted small">
+        <div class="text-center mb-4">
+            <a href="<?= $mailLink ?>" class="text-decoration-none text-muted small" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
                 <i class="fa-regular fa-envelope me-1"></i> O reservar por correo electrónico
             </a>
         </div>
 
         <a href="./" class="btn-subtle mb-5">Ver todos los tours</a>
-        
-        <a href="<?= $waLink ?>" target="_blank" class="btn-whatsapp-mobile d-md-none">
-            <i class="fa-brands fa-whatsapp fa-lg me-2"></i> Reservar por WhatsApp
-        </a>
+
+        <!-- Botón Flotante para Móviles (Activa el Modal) -->
+        <button class="btn-whatsapp-mobile d-md-none border-0" data-bs-toggle="modal" data-bs-target="#reservaModal" style="width: calc(100% - 30px); justify-content: center; padding: 16px; bottom: 15px; left: 15px; transform: none; z-index: 1045;">
+            <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Reservar por WhatsApp
+        </button>
+
+        <!-- ======================= -->
+        <!-- MODAL DE RESERVAS -->
+        <!-- ======================= -->
+        <div class="modal fade" id="reservaModal" tabindex="-1" aria-labelledby="reservaModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold text-dark w-100 text-center" id="reservaModalLabel">Tu Reserva</h5>
+                        <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; right: 20px;"></button>
+                    </div>
+                    
+                    <div class="modal-body px-4">
+                        <div class="mb-4 text-center">
+                            <h6 class="text-primary fw-bold mb-1 lh-sm"><?= htmlspecialchars($singleTour['nombre']) ?></h6>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small mb-2"><i class="fa-regular fa-calendar me-1"></i> FECHA DEL TOUR</label>
+                            <input type="date" id="resDate" class="form-control form-control-lg rounded-3 border-light shadow-sm bg-light" required>
+                        </div>
+
+                        <label class="form-label fw-bold text-secondary small mb-3"><i class="fa-solid fa-users me-1"></i> ¿CUÁNTAS PERSONAS?</label>
+                        <div class="row g-2 mb-4 justify-content-center">
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 p-3 text-center border-light shadow-sm">
+                                    <span class="d-block small text-secondary fw-semibold mb-2 lh-sm">Adultos<br><small class="text-muted fw-normal"><?= !empty($singleTour['rango_adulto']) ? '('.$singleTour['rango_adulto'].')' : '(10+ años)' ?></small></span>
+                                    <div class="qty-control shadow-sm mx-auto bg-white" style="max-width: 120px;">
+                                        <button class="qty-btn" onclick="changeQty('qtyAdult', -1)" type="button">&#8722;</button>
+                                        <input type="number" id="qtyAdult" class="qty-val border-0" value="2" min="1" readonly>
+                                        <button class="qty-btn" onclick="changeQty('qtyAdult', 1)" type="button">&#43;</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php if(!empty($singleTour['precio_nino'])): ?>
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 p-3 text-center border-light shadow-sm">
+                                    <span class="d-block small text-secondary fw-semibold mb-2 lh-sm">Niños<br><small class="text-muted fw-normal"><?= !empty($singleTour['rango_nino']) ? '('.$singleTour['rango_nino'].')' : '(3-9 años)' ?></small></span>
+                                    <div class="qty-control shadow-sm mx-auto bg-white" style="max-width: 120px;">
+                                        <button class="qty-btn" onclick="changeQty('qtyKid', -1)" type="button">&#8722;</button>
+                                        <input type="number" id="qtyKid" class="qty-val border-0" value="0" min="0" readonly>
+                                        <button class="qty-btn" onclick="changeQty('qtyKid', 1)" type="button">&#43;</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="total-display text-center shadow-sm">
+                            <div class="price-label mb-1">TOTAL ESTIMADO</div>
+                            <div class="total-cop-num mb-3" id="totalCOP">$0</div>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <div class="bg-white rounded p-2 text-center flex-fill border">
+                                    <div style="font-size:0.65rem;color:#166534;font-weight:700;"><img src="https://flagcdn.com/w40/us.png" class="flag-icon"> USD</div>
+                                    <div class="fw-bold text-success" id="totalUSD">$0</div>
+                                </div>
+                                <div class="bg-white rounded p-2 text-center flex-fill border">
+                                    <div style="font-size:0.65rem;color:#1e40af;font-weight:700;"><img src="https://flagcdn.com/w40/br.png" class="flag-icon"> BRL</div>
+                                    <div class="fw-bold text-primary" id="totalBRL">R$ 0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                        <button type="button" class="btn-whatsapp-desktop w-100 shadow m-0" onclick="sendWhatsApp()">
+                            <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Solicitar Reserva
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- FIN MODAL -->
 
     </div>
 
@@ -537,28 +573,80 @@ if ($singleTour) {
         const priceAdult = <?= $precioFinalCalc ?>;
         const priceKid = <?= $singleTour['precio_nino'] ?: 0 ?>;
         const rateUsd = <?= $tasa_tuya_usd ?>; const rateBrl = <?= $tasa_tuya_brl ?>;
+        
         const inputAdult = document.getElementById('qtyAdult');
         const inputKid = document.getElementById('qtyKid');
         const dCOP = document.getElementById('totalCOP');
         const dUSD = document.getElementById('totalUSD');
         const dBRL = document.getElementById('totalBRL');
+        const resDate = document.getElementById('resDate');
+
+        // Configurar min date para hoy
+        const today = new Date().toISOString().split('T')[0];
+        if(resDate) resDate.setAttribute('min', today);
+
         function fmt(n){ return '$' + new Intl.NumberFormat('es-CO').format(n); }
         function pInt(v){ return Math.ceil(v * 2) / 2; }
+        
         function calc() {
-            let t = (parseInt(inputAdult.value)||0)*priceAdult + (parseInt(inputKid.value)||0)*priceKid;
-            dCOP.innerText = fmt(t);
-            dUSD.innerText = '$' + pInt(t/rateUsd);
-            dBRL.innerText = 'R$ ' + pInt(t/rateBrl);
+            let t = (parseInt(inputAdult ? inputAdult.value : 0)||0)*priceAdult + (parseInt(inputKid ? inputKid.value : 0)||0)*priceKid;
+            if(dCOP) dCOP.innerText = fmt(t);
+            if(dUSD) dUSD.innerText = '$' + pInt(t/rateUsd);
+            if(dBRL) dBRL.innerText = 'R$ ' + pInt(t/rateBrl);
             // Animación pulso en total
-            dCOP.style.transform = 'scale(1.06)';
-            setTimeout(() => dCOP.style.transform = 'scale(1)', 150);
+            if(dCOP) {
+                dCOP.style.transform = 'scale(1.06)';
+                setTimeout(() => dCOP.style.transform = 'scale(1)', 150);
+            }
         }
+        
         function changeQty(id, delta) {
             const el = document.getElementById(id);
+            if(!el) return;
             const min = parseInt(el.min) || 0;
             el.value = Math.max(min, (parseInt(el.value) || 0) + delta);
             calc();
         }
+        
+        // Enviar a WhatsApp formatteado
+        function sendWhatsApp() {
+            if(!resDate.value) {
+                resDate.classList.add('is-invalid');
+                resDate.focus();
+                // Opcional: mostrar un Toast o alert "Por favor, selecciona una fecha"
+                return;
+            }
+            resDate.classList.remove('is-invalid');
+
+            // Format date to local standard DD/MM/YYYY
+            const selectedDate = new Date(resDate.value);
+            // fix timezone offset issue for pure dates
+            selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
+            const strDate = selectedDate.toLocaleDateString('es-CO');
+
+            let vAdult = inputAdult ? inputAdult.value : 2;
+            let vKid = inputKid ? inputKid.value : 0;
+            let currentUrl = window.location.href;
+
+            let msg = `Hola Descubre Cartagena! 👋 Me gustaría reservar el siguiente tour:\n\n`;
+            msg += `📍 *<?= htmlspecialchars($singleTour['nombre']) ?>*\n`;
+            msg += `🗓️ *Fecha:* ${strDate}\n`;
+            msg += `🔗 ${currentUrl}\n\n`;
+            
+            msg += `👥 *Personas:*\n`;
+            msg += `  • Adultos: ${vAdult}\n`;
+            if (vKid > 0) msg += `  • Niños: ${vKid}\n`;
+            
+            msg += `\n💰 *Total estimado:*\n`;
+            msg += `  • ${dCOP.innerText} COP\n`;
+            msg += `  • USD ${dUSD.innerText}\n`;
+            msg += `  • BRL ${dBRL.innerText}\n\n`;
+            msg += `⏰ Quedo atento para coordinar detalles. ¡Gracias!`;
+
+            const waUrl = "https://wa.me/573205899997?text=" + encodeURIComponent(msg);
+            window.open(waUrl, '_blank');
+        }
+
         calc();
 
         // Descripción expandible
