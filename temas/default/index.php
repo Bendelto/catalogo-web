@@ -394,7 +394,7 @@
         </div>
 
         <div class="text-center mb-4">
-            <a href="<?= $mailLink ?>" class="text-decoration-none text-muted small" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#reservaModal" class="text-decoration-none text-muted small" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
                 <i class="fa-regular fa-envelope me-1"></i> O reservar por correo electrónico
             </a>
         </div>
@@ -469,9 +469,12 @@
                         </div>
 
                     </div>
-                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4 flex-column gap-2">
                         <button type="button" class="btn-whatsapp-desktop w-100 shadow m-0" onclick="sendWhatsApp()">
-                            <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Solicitar Reserva
+                            <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Solicitar por WhatsApp
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary w-100 m-0" onclick="sendEmail()" style="border-radius: 50px; padding: 12px; font-weight: 600;">
+                            <i class="fa-regular fa-envelope me-2"></i> Solicitar por Correo
                         </button>
                     </div>
                 </div>
@@ -558,6 +561,43 @@
 
             const waUrl = "https://wa.me/573205899997?text=" + encodeURIComponent(msg);
             window.open(waUrl, '_blank');
+        }
+
+        function sendEmail() {
+            if(!resDate.value) {
+                resDate.classList.add('is-invalid');
+                resDate.focus();
+                return;
+            }
+            resDate.classList.remove('is-invalid');
+
+            const selectedDate = new Date(resDate.value);
+            selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
+            const strDate = selectedDate.toLocaleDateString('es-CO');
+
+            let vAdult = inputAdult ? inputAdult.value : 2;
+            let vKid = inputKid ? inputKid.value : 0;
+            let currentUrl = window.location.href;
+
+            let mailSubj = `Reserva: <?= htmlspecialchars($singleTour['nombre']) ?> - ${strDate}`;
+            
+            let msg = `Hola Descubre Cartagena!\n\nMe gustaría reservar el siguiente tour:\n\n`;
+            msg += `Tour: <?= htmlspecialchars($singleTour['nombre']) ?>\n`;
+            msg += `Fecha: ${strDate}\n`;
+            msg += `Enlace: ${currentUrl}\n\n`;
+            
+            msg += `Personas:\n`;
+            msg += `- Adultos: ${vAdult}\n`;
+            if (vKid > 0) msg += `- Niños: ${vKid}\n`;
+            
+            msg += `\nTotal estimado:\n`;
+            msg += `- ${dCOP.innerText} COP\n`;
+            msg += `- USD ${dUSD.innerText}\n`;
+            msg += `- BRL ${dBRL.innerText}\n\n`;
+            msg += `Quedo atento a su respuesta para gestionar la reserva.\n\nGracias.`;
+
+            const mailToUrl = "mailto:info@descubrecartagena.com?subject=" + encodeURIComponent(mailSubj) + "&body=" + encodeURIComponent(msg);
+            window.location.href = mailToUrl;
         }
 
         calc();
