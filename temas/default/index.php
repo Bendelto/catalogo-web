@@ -434,7 +434,7 @@
                                     <span class="d-block small text-secondary fw-semibold mb-2 lh-sm">Adultos<br><small class="text-muted fw-normal"><?= !empty($singleTour['rango_adulto']) ? '('.$singleTour['rango_adulto'].')' : '(10+ años)' ?></small></span>
                                     <div class="qty-control shadow-sm mx-auto bg-white" style="max-width: 120px;">
                                         <button class="qty-btn" onclick="changeQty('qtyAdult', -1)" type="button">&#8722;</button>
-                                        <input type="number" id="qtyAdult" class="qty-val border-0" value="2" min="1" readonly>
+                                        <input type="number" id="qtyAdult" class="qty-val border-0" value="1" min="1" readonly>
                                         <button class="qty-btn" onclick="changeQty('qtyAdult', 1)" type="button">&#43;</button>
                                     </div>
                                 </div>
@@ -473,7 +473,7 @@
                         <button type="button" id="btnModalWA" class="btn-whatsapp-desktop w-100 shadow m-0" onclick="sendWhatsApp()">
                             <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Solicitar por WhatsApp
                         </button>
-                        <button type="button" id="btnModalEmail" class="btn btn-outline-secondary w-100 m-0" onclick="sendEmail()" style="border-radius: 50px; padding: 12px; font-weight: 600; display: none;">
+                        <button type="button" id="btnModalEmail" class="btn btn-primary w-100 m-0 shadow" onclick="sendEmail()" style="border-radius: 50px; padding: 12px; font-weight: 600; display: none;">
                             <i class="fa-regular fa-envelope me-2"></i> Solicitar por Correo
                         </button>
                     </div>
@@ -552,7 +552,7 @@
             selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
             const strDate = selectedDate.toLocaleDateString('es-CO');
 
-            let vAdult = inputAdult ? inputAdult.value : 2;
+            let vAdult = inputAdult ? inputAdult.value : 1;
             let vKid = inputKid ? inputKid.value : 0;
             let currentUrl = window.location.href;
 
@@ -587,7 +587,7 @@
             selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
             const strDate = selectedDate.toLocaleDateString('es-CO');
 
-            let vAdult = inputAdult ? inputAdult.value : 2;
+            let vAdult = inputAdult ? inputAdult.value : 1;
             let vKid = inputKid ? inputKid.value : 0;
             let currentUrl = window.location.href;
 
