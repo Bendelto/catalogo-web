@@ -27,14 +27,14 @@
         
         /* --- CONTENEDOR VISTA TOUR --- */
         .calc-container { 
-            max-width: 600px; 
+            max-width: 800px; 
             margin: 0 auto; 
             padding-bottom: 80px; 
         }
-        /* Aumento del 20% solo en escritorio */
+        /* Aumento en escritorio para mayor amplitud */
         @media (min-width: 992px) {
             .calc-container {
-                max-width: 720px;
+                max-width: 1000px;
             }
         }
         /* ---------------------------- */
