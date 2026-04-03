@@ -69,6 +69,9 @@ if (isset($_POST['ajax_config'])) {
     $config['margen_usd'] = floatval($_POST['margen_usd']);
     $config['margen_brl'] = floatval($_POST['margen_brl']);
     $config['comision_agencia'] = floatval($_POST['comision_agencia'] ?? 50);
+    if (isset($_POST['tema'])) {
+        $config['tema'] = $_POST['tema'];
+    }
     file_put_contents($fileConfig, json_encode($config), LOCK_EX);
     header('Content-Type: application/json');
     echo json_encode(['success' => true]);
@@ -336,10 +339,25 @@ if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
                 <div class="card-header bg-warning text-dark fw-bold">Configuración Global</div>
                 <div class="card-body py-2">
                     <form id="configForm" class="row g-2 align-items-end">
-                        <div class="col-3"><label class="small fw-bold">-$ Dólar</label><input type="number" name="margen_usd" class="form-control form-control-sm" value="<?= $config['margen_usd'] ?? 200 ?>"></div>
-                        <div class="col-3"><label class="small fw-bold">-$ Real</label><input type="number" name="margen_brl" class="form-control form-control-sm" value="<?= $config['margen_brl'] ?? 200 ?>"></div>
-                        <div class="col-4"><label class="small fw-bold text-success">Mi Ganancia %</label><input type="number" step="0.1" name="comision_agencia" class="form-control form-control-sm fw-bold border-success text-success" value="<?= $config['comision_agencia'] ?? 50 ?>" title="Define tú ganancia base. Ej: Si pones 45, tu ganas el 45% del margen y tu aliado el 55%."></div>
-                        <div class="col-2"><button type="button" onclick="saveConfig()" class="btn btn-dark btn-sm w-100" title="Guardar"><i class="fa-solid fa-save"></i></button></div>
+                        <div class="col-2"><label class="small fw-bold">-$ USD</label><input type="number" name="margen_usd" class="form-control form-control-sm" value="<?= $config['margen_usd'] ?? 200 ?>"></div>
+                        <div class="col-2"><label class="small fw-bold">-$ BRL</label><input type="number" name="margen_brl" class="form-control form-control-sm" value="<?= $config['margen_brl'] ?? 200 ?>"></div>
+                        <div class="col-3"><label class="small fw-bold text-success">Ganancia %</label><input type="number" step="0.1" name="comision_agencia" class="form-control form-control-sm fw-bold border-success text-success" value="<?= $config['comision_agencia'] ?? 50 ?>" title="Define tú ganancia base. Ej: Si pones 45, tu ganas el 45% del margen y tu aliado el 55%."></div>
+                        <div class="col-3"><label class="small fw-bold">Tema</label>
+                            <select name="tema" class="form-select form-select-sm">
+                                <?php 
+                                if (is_dir(__DIR__ . '/temas')) {
+                                    $dirs = scandir(__DIR__ . '/temas');
+                                    foreach ($dirs as $d) {
+                                        if ($d !== '.' && $d !== '..' && is_dir(__DIR__ . '/temas/' . $d)) {
+                                            $selected = (($config['tema'] ?? 'default') === $d) ? 'selected' : '';
+                                            echo "<option value=\"$d\" $selected>$d</option>";
+                                        }
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-2"><button type="button" onclick="saveConfig()" class="btn btn-dark btn-sm w-100 px-0" title="Guardar"><i class="fa-solid fa-save"></i></button></div>
                     </form>
                 </div>
             </div>
