@@ -335,12 +335,18 @@
             </div>
         </div>
 
-        <?php if(!empty($desc)): ?>
+        <?php 
+            if(!empty($desc)): 
+                $wordCount = str_word_count(strip_tags($desc));
+                $isLong = $wordCount > 60;
+        ?>
         <div class="info-box fade-in-up">
-            <div id="descWrapper" class="desc-text desc-collapsed"><?= htmlspecialchars($desc) ?></div>
-            <button class="btn-leer-mas" id="btnLeerMas" onclick="toggleDesc()">
-                <i class="fa-solid fa-chevron-down" id="iconLeerMas"></i> Leer m&aacute;s
-            </button>
+            <div id="descWrapper" class="desc-text <?= $isLong ? 'desc-collapsed' : '' ?>"><?= htmlspecialchars($desc) ?></div>
+            <?php if($isLong): ?>
+                <button class="btn-leer-mas" id="btnLeerMas" onclick="toggleDesc()">
+                    <i class="fa-solid fa-chevron-down" id="iconLeerMas"></i> Leer m&aacute;s
+                </button>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
 
@@ -370,18 +376,10 @@
         </div>
 
         <?php if(!empty($info_adicional)): ?>
-        <div class="accordion accordion-flush mb-4" id="accordionExtras">
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInfo">
-                        <i class="fa-solid fa-circle-info me-2 text-primary"></i> Información Adicional
-                    </button>
-                </h2>
-                <div id="collapseInfo" class="accordion-collapse collapse" data-bs-parent="#accordionExtras">
-                    <div class="accordion-body text-secondary" style="font-size: 0.85rem;">
-                        <?= $info_adicional ?>
-                    </div>
-                </div>
+        <div class="info-box fade-in-up mb-4">
+            <h6 class="fw-bold mb-3"><i class="fa-solid fa-circle-info me-2 text-primary"></i> Información Adicional</h6>
+            <div class="text-secondary" style="font-size: 0.85rem;">
+                <?= $info_adicional ?>
             </div>
         </div>
         <?php endif; ?>
