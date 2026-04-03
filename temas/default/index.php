@@ -388,13 +388,13 @@
 
         <!-- BOTONES DE RESERVA EN PÁGINA (Activan el Modal) -->
         <div class="d-none d-md-block mt-5 mb-3">
-            <button class="btn-whatsapp-desktop shadow w-100 py-3" style="font-size: 1.15rem;" data-bs-toggle="modal" data-bs-target="#reservaModal">
+            <button class="btn-whatsapp-desktop shadow w-100 py-3" style="font-size: 1.15rem;" data-bs-toggle="modal" data-bs-target="#reservaModal" onclick="setModalMode('whatsapp')">
                 <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Reservar por WhatsApp
             </button>
         </div>
 
         <div class="text-center mb-4">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#reservaModal" class="text-decoration-none text-muted small" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#reservaModal" class="text-decoration-none text-muted small" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'" onclick="setModalMode('email')">
                 <i class="fa-regular fa-envelope me-1"></i> O reservar por correo electrónico
             </a>
         </div>
@@ -402,7 +402,7 @@
         <a href="./" class="btn-subtle mb-5">Ver todos los tours</a>
 
         <!-- Botón Flotante para Móviles (Activa el Modal) -->
-        <button class="btn-whatsapp-mobile d-md-none border-0" data-bs-toggle="modal" data-bs-target="#reservaModal" style="width: calc(100% - 30px); justify-content: center; padding: 16px; bottom: 15px; left: 15px; transform: none; z-index: 1045;">
+        <button class="btn-whatsapp-mobile d-md-none border-0" data-bs-toggle="modal" data-bs-target="#reservaModal" style="width: calc(100% - 30px); justify-content: center; padding: 16px; bottom: 15px; left: 15px; transform: none; z-index: 1045;" onclick="setModalMode('whatsapp')">
             <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Reservar por WhatsApp
         </button>
 
@@ -470,10 +470,10 @@
 
                     </div>
                     <div class="modal-footer border-top-0 pt-0 pb-4 px-4 flex-column gap-2">
-                        <button type="button" class="btn-whatsapp-desktop w-100 shadow m-0" onclick="sendWhatsApp()">
+                        <button type="button" id="btnModalWA" class="btn-whatsapp-desktop w-100 shadow m-0" onclick="sendWhatsApp()">
                             <i class="fa-brands fa-whatsapp fa-xl me-2"></i> Solicitar por WhatsApp
                         </button>
-                        <button type="button" class="btn btn-outline-secondary w-100 m-0" onclick="sendEmail()" style="border-radius: 50px; padding: 12px; font-weight: 600;">
+                        <button type="button" id="btnModalEmail" class="btn btn-outline-secondary w-100 m-0" onclick="sendEmail()" style="border-radius: 50px; padding: 12px; font-weight: 600; display: none;">
                             <i class="fa-regular fa-envelope me-2"></i> Solicitar por Correo
                         </button>
                     </div>
@@ -486,6 +486,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function setModalMode(mode) {
+            const btnWA = document.getElementById('btnModalWA');
+            const btnEmail = document.getElementById('btnModalEmail');
+            if (mode === 'whatsapp') {
+                btnWA.style.display = 'block';
+                btnEmail.style.display = 'none';
+            } else {
+                btnWA.style.display = 'none';
+                btnEmail.style.display = 'block';
+            }
+        }
+
         const priceAdult = <?= $precioFinalCalc ?>;
         const priceKid = <?= $singleTour['precio_nino'] ?: 0 ?>;
         const rateUsd = <?= $tasa_tuya_usd ?>; const rateBrl = <?= $tasa_tuya_brl ?>;
